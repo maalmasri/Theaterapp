@@ -1,0 +1,13 @@
+package com.maamouniverse.theaterapp;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class TheaterappApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(TheaterappApplication.class, args);
+	}
+
+}

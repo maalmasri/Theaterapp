@@ -1,0 +1,8 @@
+package com.maamouniverse.theaterapp;
+
+
+public class Main {
+    public static void main(String[] args) {
+        
+    }
+}
