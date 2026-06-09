@@ -13,41 +13,44 @@ public class AbrechnungsService {
     // Tarife für SCHLIESSER
     private static final BigDecimal PAUSCHALE_KURZ_SCHLIESSER = new BigDecimal("25.00");
     private static final BigDecimal STUNDENLOHN_BASIS_SCHLIESSER = new BigDecimal("14.00"); // Bis 8 Std. 
-    private static final BigDecimal UEBERSTUNDE_HALBE_SCHLIESSER = new BigDecimal("8.50");  // Ab 8 Std. pro halbe Std. 
+    private static final BigDecimal UEBERSTUNDE_HALBE_SCHLIESSER = new BigDecimal("8.50");  // Ab 8 Std. pro halbe Std.
+    private static final BigDecimal BLUMEN_PRAEMIE_PRO_STUEK = new BigDecimal("6.00");
 
     // Fixe Tarife für OBERSCHLIESSER
     private static final BigDecimal PAUSCHALE_KURZ_OBERSCHLIESSER = new BigDecimal("50.00");
     private static final BigDecimal PAUSCHALE_LANG_OBERSCHLIESSER = new BigDecimal("80.00");
     private static final BigDecimal PAUSCHALE_PREMIERE_OBERSCHLIESSER = new BigDecimal("120.00");
     
+    // Minijob Verdienstgrenze
     private static final BigDecimal MAX_MINIJOB_GRENZE = new BigDecimal("556.00");
     
-    
+    /*
+     * 
+     * Diesntbeginn berechnen
+     * 
+     */
     public LocalDateTime berechneDienstbeginn(Vorstellung vorstellung, UserRole rolle) {
-        if (rolle == UserRole.OBERSCHLIESSER) {
-            return vorstellung.getBeginnVorstellung().minusMinutes(90);
-        } else {
-            return vorstellung.getBeginnVorstellung().minusMinutes(60);
-        }
-    }
-    
-    
-    
-    
-    
-    
-
-    /**Verdienstberechnung*/
+    	if (rolle == UserRole.OBERSCHLIESSER) {
+    		return vorstellung.getBeginnVorstellung().minusMinutes(90);
+    		} else {
+    			return vorstellung.getBeginnVorstellung().minusMinutes(60);
+    			}
+    	}
+    /*
+     * 
+     * Verdienstberechnung
+     * 
+     */
     public BigDecimal berechneVerdienst(Dienst dienst) {
         Vorstellung vorstellung = dienst.getVorstellung();
         User mitarbeiter = dienst.getMitarbeiter();
+        BigDecimal grundVerdienst = BigDecimal.ZERO;
 
         if (vorstellung.isIstAbgesagt()) {
             long stundenVorher = ChronoUnit.HOURS.between(vorstellung.getAbsageZeitpunkt(),vorstellung.getBeginnVorstellung());
             if (stundenVorher >= 24) {
             	return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
             } else {
-                // Spätabsage: Mitarbeiter erhält den geplanten Fixbetrag / die geplante Zeit
                 return berechneGeplantenVerdienstFuerAusfall(dienst);
             }
         }
@@ -62,11 +65,31 @@ public class AbrechnungsService {
                 default:
                     return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
             }
-        }        
+        } else {
+        	if (dienst.istBlumenDienst()&& vorstellung.getStandort()==Standort.GH) {
+        		grundVerdienst = berechneLangenDienstSchliesser(dienst.getGeplanterArbeitsbeginn(), dienst.getTatsaechlichesArbeitsende());
+			}else if(dienst.getDienstTyp()==DienstTyp.KURZ) {
+				grundVerdienst=PAUSCHALE_KURZ_SCHLIESSER;
+			}else {
+				grundVerdienst = berechneLangenDienstSchliesser(dienst.getGeplanterArbeitsbeginn(), dienst.getTatsaechlichesArbeitsende());
+			}
+        }
+        if(dienst.istBlumenDienst()&&dienst.getAnzahleBlumen()>0) {
+        	BigDecimal blumenGeld=BigDecimal.valueOf(dienst.getAnzahleBlumen()).multiply(BLUMEN_PRAEMIE_PRO_STUEK);
+        	grundVerdienst=grundVerdienst.add(blumenGeld);
+        }
+        return grundVerdienst.setScale(2,RoundingMode.HALF_UP);
+        
+        
+        /*
+         * 
+         * 
+        
         if (dienst.getDienstTyp() == DienstTyp.KURZ) {
             return PAUSCHALE_KURZ_SCHLIESSER.setScale(2, RoundingMode.HALF_UP); 
         }
         return berechneLangenDienstSchliesser(dienst.getGeplanterArbeitsbeginn(), dienst.getTatsaechlichesArbeitsende());
+         */
     }
 
     /** Berechnet den langen Dienst für Schließer */
@@ -101,10 +124,14 @@ public class AbrechnungsService {
             return basisVerdienst.add(ueberstundenVerdienst).setScale(2, RoundingMode.HALF_UP);
         }
     }
-    /** Spätabsagen (< 24h)*/
+    
+    /**
+     * 
+     * Diesnst verdienstn trotz absagen
+     * 
+     */
     private BigDecimal berechneGeplantenVerdienstFuerAusfall(Dienst dienst) {
         User mitarbeiter = dienst.getMitarbeiter();
-        
         // Wenn Oberschließer, kriegt er trotz Ausfall seine volle Pauschale
         if (mitarbeiter.getRole() == UserRole.OBERSCHLIESSER) {
             switch (dienst.getDienstTyp()) {
@@ -113,7 +140,6 @@ public class AbrechnungsService {
                 case PREMIERE: return PAUSCHALE_PREMIERE_OBERSCHLIESSER;
             }
         }
-        
         // Wenn normaler Schließer, berechne anhand der geplanten Zeiten
         if (dienst.getDienstTyp() == DienstTyp.KURZ) {
             return PAUSCHALE_KURZ_SCHLIESSER;
@@ -121,8 +147,11 @@ public class AbrechnungsService {
         return berechneLangenDienstSchliesser(dienst.getGeplanterArbeitsbeginn(), dienst.getGeplantesArbeitsende());
     }
     
-    
-    
+    /*
+     * 
+     * Arbeiten Dürfen
+     * 
+     */
     public boolean darfMitarbeiterZugeordnetWerden(User mitarbeiter, List<Dienst> alleDienste, BigDecimal potenziellerVerdienst) {
         BigDecimal bisherigerVerdienst = BigDecimal.ZERO;
 

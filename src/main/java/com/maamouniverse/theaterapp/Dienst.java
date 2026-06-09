@@ -14,6 +14,8 @@ public class Dienst {
     private LocalDateTime tatsaechlichesEndzeit; // Vom Mitarbeiter eingetragen
     private BigDecimal berechneterVerdienst;
 	
+    private boolean istBlumenDienst;
+    private int anzahlBlumen;
     
     public Dienst(Long id, User user, Vorstellung vorstellung, DienstTyp dienstTyp, LocalDateTime geplanterArbeitsbeginn, LocalDateTime geplantesArbeitsende) {
         this.dienstId = id;
@@ -23,9 +25,23 @@ public class Dienst {
         this.geplanterArbeitsbeginn = geplanterArbeitsbeginn;
         this.geplantesArbeitsende = geplantesArbeitsende;
         this.berechneterVerdienst = BigDecimal.ZERO;
+        this.istBlumenDienst=false;
+        this.anzahlBlumen=0;
+        
 	}
     
-    // Getter und Setter
+    public boolean istBlumenDienst() {
+    	return istBlumenDienst;
+    }
+    public void setIstBlumenDienst(boolean istBlumenDienst) {
+    	this.istBlumenDienst=istBlumenDienst;
+    }
+    public int getAnzahleBlumen() {
+    	return anzahlBlumen;
+    }
+    public void setAnzahlBlumen(int anzahlBlumen) {
+    	this.anzahlBlumen=anzahlBlumen;
+    }
 
     public User getMitarbeiter() {
     		return user;
@@ -70,6 +86,13 @@ public class Dienst {
     public void setVerdienst(BigDecimal verdienst) {
     		this.berechneterVerdienst = verdienst;
     		
+    }
+    
+    public Long getDienstId() {
+    	return dienstId;
+    }
+    public void setDienstId(Long dienstId) {
+    	this.dienstId=dienstId;
     }
 
 }

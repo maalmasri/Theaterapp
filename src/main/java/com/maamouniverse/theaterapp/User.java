@@ -15,6 +15,22 @@ public class User {
 		this.istAvtive=istActive;
 		
 	}
+	/**
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * @Oberschließer Tagebuch zum Implemintieren
+	 */
+	
+	
+
+	
+	
+	
+	
 	// Getter und Setter
     public Long getId() {
     	return userId;
