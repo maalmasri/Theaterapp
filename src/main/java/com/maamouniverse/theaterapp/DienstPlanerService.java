@@ -153,7 +153,7 @@ public class DienstPlanerService {
         }
         return bestCandidate;
     }
-
+    //Berechnen von Verdienen im Monat
     private BigDecimal berechneBisherigenMonatsVerdienst(User u, List<Dienst> dienste) {
         BigDecimal summe = BigDecimal.ZERO;
         for (Dienst d : dienste) {
